@@ -4,7 +4,8 @@
 
 pacman::p_load(foreign, readxl, faraway, ggplot2, RColorBrewer, graphics, 
                ggpubr, nimble, ggmcmc, extraDistr, parallel, MCMCvis, 
-               gridExtra, corrplot, ggcorrplot, readr, lattice, install = FALSE)
+               gridExtra, corrplot, ggcorrplot, readr, lattice, 
+               wordcloud, tm, install = FALSE)
 
 #### Carga de datos ####
 
@@ -81,7 +82,7 @@ p <- ggplot(data = df5, aes(x = subgrupo, y = frecuencia, fill = respuesta)) +
   geom_text(aes(label = porcentaje), vjust = 3.5, position = position_dodge(0.9), 
             color = "white", size = 2.75) +
   scale_fill_manual(values = c("No" = "firebrick", "Si" = "forestgreen")) +
-  scale_y_continuous(labels = scales::number_format(accuracy = 1))
+  scale_y_continuous(breaks = seq(0, 10, by = 2))
 p
 
 ### Ítem 6: ¿Consideras que R Markdown te ha facilitado la entrega de tareas? ###
@@ -185,7 +186,7 @@ p <- ggplot(data = df11, aes(x = subgrupo, y = frecuencia, fill = respuesta)) +
   geom_text(aes(label = porcentaje), vjust = 3.5, position = position_dodge(0.9), 
             color = "white", size = 2.75) +
   scale_fill_manual(values = c("Word" = "steelblue", "R Markdown" = "forestgreen")) +
-  scale_y_continuous(labels = scales::number_format(accuracy = 1))
+  scale_y_continuous(breaks = seq(0, 10, by = 2))
 p
 
 ### Ítem 12: ¿Recomendarías el aprendizaje de R Markdown? ###
@@ -204,7 +205,7 @@ p <- ggplot(data = df12, aes(x = subgrupo, y = frecuencia, fill = respuesta)) +
   geom_text(aes(label = porcentaje), vjust = 3.5, position = position_dodge(0.9), 
             color = "white", size = 1.75) +
   scale_fill_manual(values = c("No" = "firebrick", "Si" = "forestgreen")) +
-  scale_y_continuous(labels = scales::number_format(accuracy = 1))
+  scale_y_continuous(breaks = seq(0, 12, by = 3))
 p
 
 ### Ítem 13: Lo que más me ha gustado de R Markdown es... ###
