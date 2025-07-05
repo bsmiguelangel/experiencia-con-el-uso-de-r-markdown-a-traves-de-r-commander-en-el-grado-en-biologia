@@ -2,10 +2,9 @@
 
 ## install.packages("pacman")
 
-pacman::p_load(foreign, readxl, faraway, spdep, sp, ggplot2, 
-               RColorBrewer, graphics, ggpubr, leaflet, nimble, 
-               ggmcmc, extraDistr, parallel, MCMCvis, gridExtra, 
-               corrplot, ggcorrplot, readr, lattice, install = FALSE)
+pacman::p_load(foreign, readxl, faraway, ggplot2, RColorBrewer, graphics, 
+               ggpubr, nimble, ggmcmc, extraDistr, parallel, MCMCvis, 
+               gridExtra, corrplot, ggcorrplot, readr, lattice, install = FALSE)
 
 #### Carga de datos ####
 
@@ -27,6 +26,202 @@ encuesta$P11 <- factor(encuesta$P11, levels = c("Documento de texto", "R Markdow
 encuesta$P12 <- factor(encuesta$P12, levels = c("No", "Si"))
 
 str(encuesta)
+
+#### Descriptiva numérica y gráfica ####
+
+summary(encuesta[, -c(14:17)])
+
+### Ítem 1: ¿Cuál es tu Subgrupo de Prácticas? ###
+
+df <- data.frame(grupo = rep(levels(encuesta$P0), each = 2),
+                 subgrupo = levels(encuesta$P1),
+                 frecuencia = as.numeric(table(encuesta$P1)))
+df$porcentaje <- paste0("(", round(df$frecuencia/sum(df$frecuencia) * 100, 2), "%", ")")
+df
+
+p <- ggplot(data = df, aes(x = subgrupo, y = frecuencia, fill = grupo)) + 
+  geom_bar(stat = "identity") +
+  theme_bw() + labs(x = "Subgrupo", y = "Frecuencia", fill = "Grupo") +
+  geom_text(aes(label = frecuencia), vjust = 2.0, color = "white", size = 3.5) +
+  geom_text(aes(label = porcentaje), vjust = 4.0, color = "white", size = 3.5) +
+  scale_fill_manual(values = c("Castellano" = "tomato", "Valenciano" = "steelblue"))
+p
+
+### Ítem 4: ¿Has sentido frustración mientras aprendías R Markdown? ###
+
+df4 <- data.frame(subgrupo = rep(levels(encuesta$P1), each = length(levels(encuesta$P4))),
+                  respuesta = rep(levels(encuesta$P4), times = length(levels(encuesta$P1))),
+                  frecuencia = as.numeric(unlist(by(encuesta$P4, encuesta$P1, table))))
+df4$porcentaje <- paste0("(", round(as.numeric(unlist(by(encuesta$P4, encuesta$P1, function(x) {table(x)/sum(table(x))}))) * 100, 2), "%", ")")
+df4
+
+p <- ggplot(data = df4, aes(x = subgrupo, y = frecuencia, fill = respuesta)) + 
+  geom_bar(stat = "identity", position=position_dodge()) +
+  theme_bw() + labs(x = "Subgrupo", y = "Frecuencia", fill = "Respuesta") +
+  geom_text(aes(label = frecuencia), vjust = 1.75, position = position_dodge(0.9), 
+            color = "white", size = 2.75) +
+  geom_text(aes(label = porcentaje), vjust = 3.5, position = position_dodge(0.9), 
+            color = "white", size = 2.75) +
+  scale_fill_manual(values = c("No" = "forestgreen", "Si" = "firebrick"))
+p
+
+### Ítem 5: En caso afirmativo, ¿esa frustración ha terminado por desaparecer? ###
+
+df5 <- data.frame(subgrupo = rep(levels(encuesta$P1), each = length(levels(encuesta$P5))),
+                  respuesta = rep(levels(encuesta$P5), times = length(levels(encuesta$P1))),
+                  frecuencia = as.numeric(unlist(by(encuesta$P5[which(encuesta$P4 == "Si")], encuesta$P1[which(encuesta$P4 == "Si")], table))))
+df5$porcentaje <- paste0("(", round(as.numeric(unlist(by(encuesta$P5[which(encuesta$P4 == "Si")], encuesta$P1[which(encuesta$P4 == "Si")], function(x) {table(x)/sum(table(x))}))) * 100, 2), "%", ")")
+df5
+
+p <- ggplot(data = df5, aes(x = subgrupo, y = frecuencia, fill = respuesta)) + 
+  geom_bar(stat = "identity", position=position_dodge()) +
+  theme_bw() + labs(x = "Subgrupo", y = "Frecuencia", fill = "Respuesta") +
+  geom_text(aes(label = frecuencia), vjust = 1.75, position = position_dodge(0.9), 
+            color = "white", size = 2.75) +
+  geom_text(aes(label = porcentaje), vjust = 3.5, position = position_dodge(0.9), 
+            color = "white", size = 2.75) +
+  scale_fill_manual(values = c("No" = "firebrick", "Si" = "forestgreen")) +
+  scale_y_continuous(labels = scales::number_format(accuracy = 1))
+p
+
+### Ítem 6: ¿Consideras que R Markdown te ha facilitado la entrega de tareas? ###
+
+df6 <- data.frame(subgrupo = rep(levels(encuesta$P1), each = length(levels(encuesta$P6))),
+                  respuesta = rep(levels(encuesta$P6), times = length(levels(encuesta$P1))),
+                  frecuencia = as.numeric(unlist(by(encuesta$P6, encuesta$P1, table))))
+df6$porcentaje <- paste0("(", round(as.numeric(unlist(by(encuesta$P6, encuesta$P1, function(x) {table(x)/sum(table(x))}))) * 100, 2), "%", ")")
+df6
+
+p <- ggplot(data = df6, aes(x = subgrupo, y = frecuencia, fill = respuesta)) + 
+  geom_bar(stat = "identity", position=position_dodge()) +
+  theme_bw() + labs(x = "Subgrupo", y = "Frecuencia", fill = "Respuesta") +
+  geom_text(aes(label = frecuencia), vjust = 1.75, position = position_dodge(0.9), 
+            color = "white", size = 1.75) +
+  geom_text(aes(label = porcentaje), vjust = 3.5, position = position_dodge(0.9), 
+            color = "white", size = 1.75) +
+  scale_fill_manual(values = c("No" = "firebrick", "Si" = "forestgreen"))
+p
+
+### Ítem 7: ¿Cómo calificarías la dificultad de aprender R Markdown? ###
+
+df7 <- data.frame(grupo = as.character(encuesta$P0),
+                  subgrupo = as.character(encuesta$P1),
+                  respuesta = as.numeric(encuesta$P7))
+df7
+
+p <- ggplot(data = subset(df7, !is.na(subgrupo)), aes(x = subgrupo, y = respuesta)) + 
+  geom_dotplot(aes(fill = grupo), binaxis = "y", stackdir = "center", dotsize = 0.75) +
+  theme_bw() + labs(x = "Subgrupo", y = "Respuesta", fill = "Grupo") +
+  scale_fill_manual(values = c("Castellano" = "tomato", "Valenciano" = "steelblue")) + 
+  stat_summary(fun.y = mean, geom = "point", shape = 18, size = 3, color = "black") +
+  scale_y_continuous(breaks = 1:length(levels(encuesta$P7)),
+    labels = c("Muy facil (1)", "Facil (2)", "Normal (3)", "Dificil (4)", "Muy dificil (5)"))
+p
+
+### Ítem 8: ¿R Markdown te ha facilitado comprender los análisis estadísticos? ###
+
+df8 <- data.frame(grupo = as.character(encuesta$P0),
+                  subgrupo = as.character(encuesta$P1),
+                  respuesta = as.numeric(encuesta$P8))
+df8
+
+p <- ggplot(data = subset(df8, !is.na(subgrupo)), aes(x = subgrupo, y = respuesta)) + 
+  geom_dotplot(aes(fill = grupo), binaxis = "y", stackdir = "center", dotsize = 0.75) +
+  theme_bw() + labs(x = "Subgrupo", y = "Respuesta", fill = "Grupo") +
+  scale_fill_manual(values = c("Castellano" = "tomato", "Valenciano" = "steelblue")) + 
+  stat_summary(fun.y = mean, geom = "point", shape = 18, size = 3, color = "black") +
+  scale_y_continuous(breaks = 1:length(levels(encuesta$P7)),
+                     labels = c("Facil. mucho (1)", "Facilitado (2)", "Normal (3)", "Dificultado (4)", "Dific. mucho (5)"))
+p
+
+### Ítem 9: ¿Cuál ha sido tu grado de satisfacción utilizando R Markdown? ###
+
+df9 <- data.frame(grupo = as.character(encuesta$P0),
+                  subgrupo = as.character(encuesta$P1),
+                  respuesta = as.numeric(encuesta$P9))
+df9
+
+p <- ggplot(data = subset(df9, !is.na(subgrupo)), aes(x = subgrupo, y = respuesta)) + 
+  geom_dotplot(aes(fill = grupo), binaxis = "y", stackdir = "center", dotsize = 0.75) +
+  theme_bw() + labs(x = "Subgrupo", y = "Respuesta", fill = "Grupo") +
+  scale_fill_manual(values = c("Castellano" = "tomato", "Valenciano" = "steelblue")) + 
+  stat_summary(fun.y = mean, geom = "point", shape = 18, size = 3, color = "black") +
+  scale_y_continuous(breaks = 1:length(levels(encuesta$P7)),
+                     labels = c("Muy satisf. (1)", "Satisfecho (2)", "Normal (3)", "Insatisfecho (4)", "Muy insatisf. (5)"))
+p
+
+### Ítem 10: ¿Consideras que R Markdown es una herramienta útil? ###
+
+df10 <- data.frame(subgrupo = rep(levels(encuesta$P1), each = length(levels(encuesta$P10))),
+                  respuesta = rep(levels(encuesta$P10), times = length(levels(encuesta$P1))),
+                  frecuencia = as.numeric(unlist(by(encuesta$P10, encuesta$P1, table))))
+df10$porcentaje <- paste0("(", round(as.numeric(unlist(by(encuesta$P10, encuesta$P1, function(x) {table(x)/sum(table(x))}))) * 100, 2), "%", ")")
+df10
+
+p <- ggplot(data = df10, aes(x = subgrupo, y = frecuencia, fill = respuesta)) + 
+  geom_bar(stat = "identity", position=position_dodge()) +
+  theme_bw() + labs(x = "Subgrupo", y = "Frecuencia", fill = "Respuesta") +
+  geom_text(aes(label = frecuencia), vjust = 1.75, position = position_dodge(0.9), 
+            color = "white", size = 1.75) +
+  geom_text(aes(label = porcentaje), vjust = 3.5, position = position_dodge(0.9), 
+            color = "white", size = 1.75) +
+  scale_fill_manual(values = c("No" = "firebrick", "Si" = "forestgreen"))
+p
+
+### Ítem 11: En el futuro, ¿recurrirías a \texttt{Word} o R Markdown? ###
+
+levels(encuesta$P11) <- c("Word", "R Markdown")
+df11 <- data.frame(subgrupo = rep(levels(encuesta$P1), each = length(levels(encuesta$P11))),
+                   respuesta = rep(levels(encuesta$P11), times = length(levels(encuesta$P1))),
+                   frecuencia = as.numeric(unlist(by(encuesta$P11, encuesta$P1, table))))
+df11$porcentaje <- paste0("(", round(as.numeric(unlist(by(encuesta$P11, encuesta$P1, function(x) {table(x)/sum(table(x))}))) * 100, 2), "%", ")")
+df11
+
+p <- ggplot(data = df11, aes(x = subgrupo, y = frecuencia, fill = respuesta)) + 
+  geom_bar(stat = "identity", position=position_dodge()) +
+  theme_bw() + labs(x = "Subgrupo", y = "Frecuencia", fill = "Respuesta") +
+  geom_text(aes(label = frecuencia), vjust = 1.75, position = position_dodge(0.9), 
+            color = "white", size = 2.75) +
+  geom_text(aes(label = porcentaje), vjust = 3.5, position = position_dodge(0.9), 
+            color = "white", size = 2.75) +
+  scale_fill_manual(values = c("Word" = "steelblue", "R Markdown" = "forestgreen")) +
+  scale_y_continuous(labels = scales::number_format(accuracy = 1))
+p
+
+### Ítem 12: ¿Recomendarías el aprendizaje de R Markdown? ###
+
+df12 <- data.frame(subgrupo = rep(levels(encuesta$P1), each = length(levels(encuesta$P12))),
+                   respuesta = rep(levels(encuesta$P12), times = length(levels(encuesta$P1))),
+                   frecuencia = as.numeric(unlist(by(encuesta$P12, encuesta$P1, table))))
+df12$porcentaje <- paste0("(", round(as.numeric(unlist(by(encuesta$P12, encuesta$P1, function(x) {table(x)/sum(table(x))}))) * 100, 2), "%", ")")
+df12
+
+p <- ggplot(data = df12, aes(x = subgrupo, y = frecuencia, fill = respuesta)) + 
+  geom_bar(stat = "identity", position=position_dodge()) +
+  theme_bw() + labs(x = "Subgrupo", y = "Frecuencia", fill = "Respuesta") +
+  geom_text(aes(label = frecuencia), vjust = 1.75, position = position_dodge(0.9), 
+            color = "white", size = 1.75) +
+  geom_text(aes(label = porcentaje), vjust = 3.5, position = position_dodge(0.9), 
+            color = "white", size = 1.75) +
+  scale_fill_manual(values = c("No" = "firebrick", "Si" = "forestgreen")) +
+  scale_y_continuous(labels = scales::number_format(accuracy = 1))
+p
+
+### Ítem 13: Lo que más me ha gustado de R Markdown es... ###
+
+
+
+### Ítem 14: Lo que menos me ha gustado de R Markdown es... ###
+
+
+
+### Ítem 15: Lo que más me ha costado de R Markdown es... ###
+
+
+
+### Ítem 16: ¿Cómo mejorarías las clases en el uso de R Markdown? ###
+
+
 
 #### Variables de interés ####
 
@@ -123,10 +318,6 @@ table(grupo, subgrupo)
 # Number of levels of each (categorical) covariate
 NGroups <- length(table(grupo))
 NSubgroups <- length(table(subgrupo))
-
-#### Descriptiva ####
-
-summary(encuesta[, -c(14:17)])
 
 #### Modelo sin EAI ####
 
@@ -310,108 +501,6 @@ system.time(salnimble <- parLapply(cl = this_cluster, X = 1:n.chains,
 
 # It's good practice to close the cluster when you're done with it.
 stopCluster(this_cluster)
-
-#### Function: salnimble to salwinbugs for Model sin EAI ####
-
-NimToWin <- function(salnimble) {
-  
-  n.chains <- length(salnimble)
-  n.sims <- n.chains * nrow(salnimble[[1]])
-  
-  kappa <- array(dim = c(n.sims, NSex, NAges, NCats, NVars))
-  psi <- array(dim = c(n.sims, NResp, NVars))
-  sd.M.Resp <- numeric(length = n.sims)
-  M.Resp <- array(dim = c(n.sims, NVars, NVars))
-  theta <- array(dim = c(n.sims, NMuni, NVars))
-  sd.M.Muni <- numeric(length = n.sims)
-  M.Muni <- array(dim = c(n.sims, NVars, NVars))
-  rho <- matrix(nrow = n.sims, ncol = NVars)
-  
-  for (Var in 1:NVars) {
-    for (Cat in 1:(NCats - 1)) {
-      for (Sex in 1:NSex) {
-        for (Age in 1:NAges) {
-          kappa[, Sex, Age, Cat, Var] <- c(salnimble[[1]][,  paste0("kappa[", Sex, ", ", Age, ", ", Cat, ", ", Var, "]")],
-                                           salnimble[[2]][,  paste0("kappa[", Sex, ", ", Age, ", ", Cat, ", ", Var, "]")],
-                                           salnimble[[3]][,  paste0("kappa[", Sex, ", ", Age, ", ", Cat, ", ", Var, "]")],
-                                           salnimble[[4]][,  paste0("kappa[", Sex, ", ", Age, ", ", Cat, ", ", Var, "]")],
-                                           salnimble[[5]][,  paste0("kappa[", Sex, ", ", Age, ", ", Cat, ", ", Var, "]")])
-        }
-      }
-    }
-  }
-  
-  for (Var in 1:NVars) {
-    for (Resp in 1:NResp) {
-      psi[, Resp, Var] <- c(salnimble[[1]][, paste0("psi[", Resp, ", ", Var, "]")], 
-                            salnimble[[2]][, paste0("psi[", Resp, ", ", Var, "]")], 
-                            salnimble[[3]][, paste0("psi[", Resp, ", ", Var, "]")], 
-                            salnimble[[4]][, paste0("psi[", Resp, ", ", Var, "]")], 
-                            salnimble[[5]][, paste0("psi[", Resp, ", ", Var, "]")])
-    }
-  }
-  
-  sd.M.Resp <- c(salnimble[[1]][, "sd.M.Resp"], salnimble[[2]][, "sd.M.Resp"], 
-                 salnimble[[3]][, "sd.M.Resp"], salnimble[[4]][, "sd.M.Resp"], 
-                 salnimble[[5]][, "sd.M.Resp"])
-  
-  for (Var1 in 1:NVars) {
-    for (Var2 in 1:NVars) {
-      M.Resp[, Var1, Var2] <- c(salnimble[[1]][, paste0("M.Resp[", Var1, ", ", Var2, "]")], 
-                                salnimble[[2]][, paste0("M.Resp[", Var1, ", ", Var2, "]")], 
-                                salnimble[[3]][, paste0("M.Resp[", Var1, ", ", Var2, "]")], 
-                                salnimble[[4]][, paste0("M.Resp[", Var1, ", ", Var2, "]")], 
-                                salnimble[[5]][, paste0("M.Resp[", Var1, ", ", Var2, "]")])
-    }
-  }
-  
-  for (Var in 1:NVars) {
-    for (Muni in 1:NMuni) {
-      theta[, Muni, Var] <- c(salnimble[[1]][, paste0("theta[", Muni, ", ", Var, "]")], 
-                              salnimble[[2]][, paste0("theta[", Muni, ", ", Var, "]")], 
-                              salnimble[[3]][, paste0("theta[", Muni, ", ", Var, "]")], 
-                              salnimble[[4]][, paste0("theta[", Muni, ", ", Var, "]")], 
-                              salnimble[[5]][, paste0("theta[", Muni, ", ", Var, "]")])
-    }
-  }
-  
-  sd.M.Muni <- c(salnimble[[1]][, "sd.M.Muni"], salnimble[[2]][, "sd.M.Muni"], 
-                 salnimble[[3]][, "sd.M.Muni"], salnimble[[4]][, "sd.M.Muni"], 
-                 salnimble[[5]][, "sd.M.Muni"])
-  
-  for (Var1 in 1:NVars) {
-    for (Var2 in 1:NVars) {
-      M.Muni[, Var1, Var2] <- c(salnimble[[1]][, paste0("M.Muni[", Var1, ", ", Var2, "]")], 
-                                salnimble[[2]][, paste0("M.Muni[", Var1, ", ", Var2, "]")], 
-                                salnimble[[3]][, paste0("M.Muni[", Var1, ", ", Var2, "]")], 
-                                salnimble[[4]][, paste0("M.Muni[", Var1, ", ", Var2, "]")], 
-                                salnimble[[5]][, paste0("M.Muni[", Var1, ", ", Var2, "]")])
-    }
-  }
-  
-  for (Var in 1:NVars) {
-    rho[, Var] <- c(salnimble[[1]][, paste0("rho[", Var, "]")], 
-                    salnimble[[2]][, paste0("rho[", Var, "]")],
-                    salnimble[[3]][, paste0("rho[", Var, "]")], 
-                    salnimble[[4]][, paste0("rho[", Var, "]")], 
-                    salnimble[[5]][, paste0("rho[", Var, "]")])
-  }
-  
-  summary <- MCMCsummary(object = salnimble, round = 4)
-  # summary <- "not available"
-  sims.list <- list("kappa" = kappa, "theta" = theta, "sd.M.Muni" = sd.M.Muni, 
-                    "M.Muni" = M.Muni, "rho" = rho,
-                    "psi" = psi, "sd.M.Resp" = sd.M.Resp, "M.Resp" = M.Resp)
-  
-  salwinbugs <- list("summary" = summary, "sims.list" = sims.list,
-                     "n.chains" = n.chains, "n.sims" = n.sims)
-  
-  return(salwinbugs)
-}
-
-salwinbugs <- NimToWin(salnimble = salnimble)
-
-salwinbugs$summary[startsWith(labels(salwinbugs$summary)[[1]], "kappa"), ]
 
 #### Modelo con EAI ####
 
